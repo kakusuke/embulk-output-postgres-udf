@@ -24,21 +24,21 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         public String getUser();
 
         @Config("password")
-        @ConfigDefault("")
+        @ConfigDefault("\"\"")
         public String getPassword();
 
         @Config("database")
         public String getDatabase();
 
         @Config("schema")
-        @ConfigDefault("public")
+        @ConfigDefault("\"public\"")
         public String getSchema();
 
         @Config("query")
         public String getQuery();
 
         @Config("language")
-        @ConfigDefault("plpgsql")
+        @ConfigDefault("\"plpgsql\"")
         public String getLanguage();
 
         /*
