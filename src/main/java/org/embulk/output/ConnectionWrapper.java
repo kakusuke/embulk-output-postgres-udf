@@ -18,9 +18,9 @@ public class ConnectionWrapper implements AutoCloseable {
     private final Logger logger = Exec.getLogger(ConnectionWrapper.class);
     private final Connection con;
 
-    public ConnectionWrapper(Connection con, String schemaName) throws SQLException {
+    public ConnectionWrapper(Connection con, String schemaName, boolean autoCommit) throws SQLException {
         this.con = con;
-        con.setAutoCommit(false);
+        con.setAutoCommit(autoCommit);
         if (schemaName != null) {
             Statement stmt = con.createStatement();
             String sql = "SET search_path TO '" + schemaName + "'";
@@ -34,12 +34,21 @@ public class ConnectionWrapper implements AutoCloseable {
         con.close();
     }
 
-    public void createTempFunction(String functionName, Schema schema, String query, String language) throws SQLException {
-        String sql = String.format("CREATE OR REPLACE FUNCTION pg_temp.\"%s\"(%s) RETURNS void AS $$\n%s\n$$ LANGUAGE %s",
+    public void createFunction(String functionName, Schema schema, String query, String language) throws SQLException {
+        String sql = String.format("CREATE OR REPLACE FUNCTION \"%s\"(%s)\nRETURNS void AS $$\n%s\n$$ LANGUAGE %s",
             functionName,
             getArgumentsString(schema),
             query,
             language
+        );
+        logger.info("SQL: " + sql);
+        con.createStatement().execute(sql);
+    }
+
+    public void dropFunction(String functionName, Schema schema) throws SQLException {
+        String sql = String.format("DROP FUNCTION IF EXISTS \"%s\"(%s)",
+            functionName,
+            getArgumentsString(schema)
         );
         logger.info("SQL: " + sql);
         con.createStatement().execute(sql);
@@ -66,7 +75,7 @@ public class ConnectionWrapper implements AutoCloseable {
             }
             builder.append("?::" + getSqlTypeName(schema.getColumnType(i)));
         }
-        String sql = String.format("{ call pg_temp.\"%s\"(%s) }", functionName, builder.toString());
+        String sql = String.format("{ call \"%s\"(%s) }", functionName, builder.toString());
         logger.info("SQL: " + sql);
         return con.prepareCall(sql);
     }

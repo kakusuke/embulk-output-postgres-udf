@@ -21,10 +21,10 @@ public class PostgresUDFConnector {
         this.schemaName = schemaName;
     }
 
-    public ConnectionWrapper connect() throws SQLException {
+    public ConnectionWrapper connect(boolean autoCommit) throws SQLException {
         Connection c = createConnection();
         try {
-            ConnectionWrapper con = new ConnectionWrapper(c, schemaName);
+            ConnectionWrapper con = new ConnectionWrapper(c, schemaName, autoCommit);
             c = null;
             return con;
         } finally {

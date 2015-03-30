@@ -15,8 +15,8 @@ configurations {
 version = "0.1.0"
 
 dependencies {
-    compile  "org.embulk:embulk-core:0.5.3"
-    provided "org.embulk:embulk-core:0.5.3"
+    compile  "org.embulk:embulk-core:0.5.4"
+    provided "org.embulk:embulk-core:0.5.4"
     // compile "YOUR_JAR_DEPENDENCY_GROUP:YOUR_JAR_DEPENDENCY_MODULE:YOUR_JAR_DEPENDENCY_VERSION"
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
     testCompile "junit:junit:4.+"

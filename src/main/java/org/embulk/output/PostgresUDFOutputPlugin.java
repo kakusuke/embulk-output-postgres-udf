@@ -34,8 +34,8 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         @ConfigDefault("\"public\"")
         public String getSchema();
 
-        @Config("query")
-        public String getQuery();
+        @Config("function")
+        public String getFunction();
 
         @Config("language")
         @ConfigDefault("\"plpgsql\"")
@@ -59,6 +59,13 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         // return resume(task.dump(), schema, taskCount, control);
 
         // non-retryable (non-idempotent) output:
+        try {
+            ConnectionWrapper con = getConnector(task).connect(true);
+            con.createFunction(getFunctionName(), schema, task.getFunction(), task.getLanguage());
+        }
+        catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
         control.run(task.dump());
         return Exec.newConfigDiff();
     }
@@ -70,6 +77,13 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
 
     @Override
     public void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<CommitReport> successCommitReports) {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        try {
+            ConnectionWrapper con = getConnector(task).connect(true);
+            con.dropFunction(getFunctionName(), schema);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -78,7 +92,7 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         return new PluginPageOutput(task, schema);
     }
 
-    private PostgresUDFConnector getConnector(PluginTask task) {
+    private static PostgresUDFConnector getConnector(PluginTask task) {
         String url = String.format("jdbc:postgresql://%s:%d/%s",
                 task.getHost(), task.getPort(), task.getDatabase());
 
@@ -91,8 +105,12 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         return new PostgresUDFConnector(url, props, task.getSchema());
     }
 
-    class PluginPageOutput implements TransactionalPageOutput {
+    private static String getFunctionName() {
+        Timestamp t = Exec.session().getTransactionTime();
+        return String.format("fn_%016x%08x", t.getEpochSecond(), t.getNano());
+    }
 
+    static class PluginPageOutput implements TransactionalPageOutput {
         private final Logger logger;
         private final PluginTask task;
         private final Schema schema;
@@ -105,9 +123,9 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
             this.schema = schema;
             this.pageReader = new PageReader(schema);
             try {
-                this.connection = getConnector(task).connect();
-                this.connection.createTempFunction(getFunctionName(), schema, task.getQuery(), task.getLanguage());
-            } catch (SQLException e) {
+                this.connection = getConnector(task).connect(false);
+            }
+            catch (SQLException e) {
                 throw Throwables.propagate(e);
             }
         }
@@ -116,6 +134,7 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         public void add(Page page) {
             long startTime = System.currentTimeMillis();
             pageReader.setPage(page);
+
             try (PreparedStatement stmt = this.connection.prepareCall(getFunctionName(), schema)) {
                 while (pageReader.nextRecord()) {
                     for (int i = 0; i < schema.getColumnCount(); i++) {
@@ -140,7 +159,7 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
                 long endTime = System.currentTimeMillis();
                 logger.info("> {} seconds.", (endTime - startTime) / 1000.0);
             }
-            catch(SQLException e){
+            catch (SQLException e) {
                 throw Throwables.propagate(e);
             }
         }
@@ -184,11 +203,6 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
                 throw Throwables.propagate(e);
             }
             return Exec.newCommitReport();
-        }
-
-        private String getFunctionName() {
-            Timestamp t = Exec.session().getTransactionTime();
-            return String.format("fn_%016x%08x", t.getEpochSecond(), t.getNano());
         }
 
     }
