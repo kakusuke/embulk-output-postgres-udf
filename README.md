@@ -53,9 +53,9 @@ out:
           purchase timestamp,
           comment text
         );
-    exception
-      when unique_violation then -- do nothing
-    end;
+      exception
+        when unique_violation then -- do nothing
+      end;
       insert into sample values(id, account, time, purchase, comment);
     end;
 ```
