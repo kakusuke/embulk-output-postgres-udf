@@ -16,7 +16,7 @@ compileJava {
     sourceCompatibility = '1.7'
 }
 
-version = "0.1.1"
+version = "0.1.2"
 
 dependencies {
     compile  "org.embulk:embulk-core:0.5.4"
