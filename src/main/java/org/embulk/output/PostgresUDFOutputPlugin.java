@@ -139,7 +139,9 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
                 while (pageReader.nextRecord()) {
                     for (int i = 0; i < schema.getColumnCount(); i++) {
                         Class<?> type = schema.getColumnType(i).getJavaType();
-                        if (type.equals(boolean.class)) {
+                        if (pageReader.isNull(i)) {
+                            stmt.setObject(i + 1, null);
+                        } else if (type.equals(boolean.class)) {
                             stmt.setBoolean(i + 1, pageReader.getBoolean(i));
                         } else if (type.equals(double.class)) {
                             stmt.setDouble(i + 1, pageReader.getDouble(i));
