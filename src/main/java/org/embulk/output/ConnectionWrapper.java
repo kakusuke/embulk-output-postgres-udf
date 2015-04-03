@@ -60,7 +60,7 @@ public class ConnectionWrapper implements AutoCloseable {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append("\"" + schema.getColumnName(i) + "\"");
+            builder.append("\"" + schema.getColumnName(i).toLowerCase() + "\"");
             builder.append(" ");
             builder.append(getSqlTypeName(schema.getColumnType(i)));
         }
