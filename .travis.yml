@@ -1,0 +1,17 @@
+language: java
+addons:
+  postgresql: 9.4
+jdk:
+  - oraclejdk7
+  - oraclejdk8
+env:
+  - version=0.6.15
+before_install:
+  - curl --create-dirs -o .embulk/bin/embulk -L "https://bintray.com/artifact/download/embulk/maven/embulk-${version}.jar"
+  - chmod +x .embulk/bin/embulk
+  - export PATH=".embulk/bin:$PATH"
+before_script:
+  - ./gradlew clean gem
+  - psql -c 'create database travis_ci_test;' -U postgres
+script:
+  - ls ci/*.yml | xargs -I% embulk run -I lib %
