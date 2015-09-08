@@ -76,7 +76,7 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
     }
 
     @Override
-    public void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<CommitReport> successCommitReports) {
+    public void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<TaskReport> successTaskReports) {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         try {
             ConnectionWrapper con = getConnector(task).connect(true);
@@ -197,14 +197,14 @@ public class PostgresUDFOutputPlugin implements OutputPlugin {
         }
 
         @Override
-        public CommitReport commit() {
+        public TaskReport commit() {
             try {
                 connection.commit();
             }
             catch (Exception e) {
                 throw Throwables.propagate(e);
             }
-            return Exec.newCommitReport();
+            return Exec.newTaskReport();
         }
 
     }
