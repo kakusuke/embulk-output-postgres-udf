@@ -12,7 +12,7 @@ configurations {
     provided
 }
 
-version = "0.1.2"
+version = "0.2.0"
 
 ext {
     javaVersion = '1.7'
@@ -25,8 +25,8 @@ compileJava {
 }
 
 dependencies {
-    compile  "org.embulk:embulk-core:0.6.16"
-    provided "org.embulk:embulk-core:0.6.16"
+    compile  "org.embulk:embulk-core:0.7.4"
+    provided "org.embulk:embulk-core:0.7.4"
     // compile "YOUR_JAR_DEPENDENCY_GROUP:YOUR_JAR_DEPENDENCY_MODULE:YOUR_JAR_DEPENDENCY_VERSION"
     compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
     testCompile "junit:junit:4.+"
